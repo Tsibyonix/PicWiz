@@ -11,7 +11,7 @@
     tools:context="com.core.picwiz.LoginActivity">
 
     <ScrollView
-        android:id="@+id/scrol_view_login_form"
+        android:id="@+id/scroll_view_login_form"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:fillViewport="false">
@@ -72,7 +72,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/prompt_username"
-                    android:inputType="textNoSuggestions"
                     android:maxLines="1"
                     android:singleLine="true" />
             </android.support.design.widget.TextInputLayout>

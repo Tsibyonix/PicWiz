@@ -1,5 +1,6 @@
 package com.core.picwiz;
 
+import android.content.SharedPreferences;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +11,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
+    private SharedPreferences settings;
+
     private boolean register = false;
 
     private TextInputLayout mTextInputLayoutEmail;
@@ -27,6 +30,8 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        settings = getSharedPreferences("config", MODE_PRIVATE);
 
         mTextInputLayoutEmail = (TextInputLayout) findViewById(R.id.text_input_layout_email);
         mTextInputLayoutPassword = (TextInputLayout) findViewById(R.id.text_input_layout_password);
