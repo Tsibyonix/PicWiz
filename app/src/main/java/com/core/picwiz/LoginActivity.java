@@ -31,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        settings = getSharedPreferences("config", MODE_PRIVATE);
+//        settings = getSharedPreferences("config", MODE_PRIVATE);
 
         mTextInputLayoutEmail = (TextInputLayout) findViewById(R.id.text_input_layout_email);
         mTextInputLayoutPassword = (TextInputLayout) findViewById(R.id.text_input_layout_password);
