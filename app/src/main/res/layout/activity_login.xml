@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -21,6 +22,13 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_gravity="center">
+
+            <ImageView
+                android:layout_width="256dp"
+                android:layout_height="64dp"
+                android:layout_gravity="center"
+                android:src="@drawable/picwiz"
+                android:contentDescription="@string/logo" />
 
             <android.support.design.widget.TextInputLayout
                 android:id="@+id/text_input_layout_email"
@@ -89,4 +97,4 @@
         </LinearLayout>
 
     </ScrollView>
-</RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

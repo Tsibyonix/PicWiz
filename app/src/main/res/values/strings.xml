@@ -7,4 +7,5 @@
     <string name="action_register">Register</string>
     <string name="prompt_or_register">or Register?</string>
     <string name="prompt_or_sign_in">or Sign in</string>
+    <string name="logo">logo</string>
 </resources>
