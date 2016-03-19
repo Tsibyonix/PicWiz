@@ -1,12 +1,18 @@
 package com.core.picwiz;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.SharedPreferences;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +21,9 @@ public class LoginActivity extends AppCompatActivity {
 
     private boolean register = false;
 
+    private ImageView mImageViewLogo;
+
+    private LinearLayout mLinearLayoutLoginForm;
     private TextInputLayout mTextInputLayoutEmail;
     private TextInputLayout mTextInputLayoutPassword;
     private TextInputLayout mTextInputLayoutUsername;
@@ -33,6 +42,9 @@ public class LoginActivity extends AppCompatActivity {
 
 //        settings = getSharedPreferences("config", MODE_PRIVATE);
 
+        mImageViewLogo = (ImageView) findViewById(R.id.image_view_logo);
+
+        mLinearLayoutLoginForm = (LinearLayout) findViewById(R.id.linear_layout_login_form);
         mTextInputLayoutEmail = (TextInputLayout) findViewById(R.id.text_input_layout_email);
         mTextInputLayoutPassword = (TextInputLayout) findViewById(R.id.text_input_layout_password);
         mTextInputLayoutUsername = (TextInputLayout) findViewById(R.id.text_input_layout_username);
@@ -46,6 +58,7 @@ public class LoginActivity extends AppCompatActivity {
 
         mTextInputLayoutUsername.setVisibility(View.GONE);
 
+        animation();
 
         mButtonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,5 +86,27 @@ public class LoginActivity extends AppCompatActivity {
             mTextViewRegister.setText(R.string.prompt_or_sign_in);
             register = true;
         }
+    }
+
+    void animation() {
+        final Animation fadeIn = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+        mImageViewLogo.startAnimation(fadeIn);
+        fadeIn.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                mLinearLayoutLoginForm.setVisibility(View.VISIBLE);
+                mLinearLayoutLoginForm.setAnimation(fadeIn);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
     }
 }
