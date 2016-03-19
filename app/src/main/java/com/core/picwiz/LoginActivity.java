@@ -40,7 +40,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-//        settings = getSharedPreferences("config", MODE_PRIVATE);
+        settings = getSharedPreferences("config", MODE_PRIVATE);
 
         mImageViewLogo = (ImageView) findViewById(R.id.image_view_logo);
 
