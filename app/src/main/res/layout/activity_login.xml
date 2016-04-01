@@ -113,6 +113,7 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:paddingTop="8dp"
                     android:id="@+id/text_view_register"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
