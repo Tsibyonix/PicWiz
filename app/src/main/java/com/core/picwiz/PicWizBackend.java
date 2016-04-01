@@ -25,6 +25,8 @@ public class PicWizBackend implements MyEventListener {
 
     private int success = 0;
     private String message = "Unknown Error";
+    private String host = "none";
+    private String id = null;
 
     public PicWizBackend(Context context) {
         this.context = context;
@@ -39,8 +41,20 @@ public class PicWizBackend implements MyEventListener {
         return success;
     }
 
+    public String getHost() {
+        return host;
+    }
+
+    public String getId() {
+        return id;
+    }
+
     public Boolean getWait() {
         return responseReceived;
+    }
+
+    public void setResponseReceivedFalse() {
+        responseReceived = false;
     }
 
     public void register(String email, String password, String username) {
@@ -54,6 +68,9 @@ public class PicWizBackend implements MyEventListener {
         try {
             message = jsonObject.getString("message");
             success = jsonObject.getInt("success");
+            host = jsonObject.getString("host");
+            if (success == 1)
+                id = jsonObject.getString("id");
         } catch (JSONException e) {
             e.printStackTrace();
             Log.i("register: ", e.getMessage());
@@ -70,6 +87,7 @@ public class PicWizBackend implements MyEventListener {
             success = 0;
         } else {
             try {
+                host = jsonObject.getString("host");
                 message = jsonObject.getString("message");
                 success = jsonObject.getInt("success");
             } catch (JSONException e) {
