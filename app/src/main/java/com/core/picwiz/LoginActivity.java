@@ -1,13 +1,14 @@
 package com.core.picwiz;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -44,6 +45,9 @@ public class LoginActivity extends AppCompatActivity {
     private Button mButtonSignIn;
     private TextView mTextViewRegister;
 
+    private Boolean timeout = false;
+    private PicWizBackend picWizBackend;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,17 +74,65 @@ public class LoginActivity extends AppCompatActivity {
 
         mTextInputLayoutUsername.setVisibility(View.GONE);
 
+        picWizBackend = new PicWizBackend(LoginActivity.this);
+
         //settings.edit().putString("USER_ID", "test").apply();
         ID = settings.getString("USER_ID", null);
         email = settings.getString("EMAIL", null);
 
         animation(false);
 
+        final CountDownTimer countDownTimer = new CountDownTimer(10000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.i("time", String.valueOf(millisUntilFinished));
+                if (picWizBackend.getWait()) {
+                    Log.i("while: ", picWizBackend.getSuccess()+": "+picWizBackend.getMessage());
+                    this.cancel();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                timeout = true;
+                Log.i("time", "Clock finished");
+                this.cancel();
+            }
+        };
+
         mButtonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (register) {
                     // proceed with register
+                    String email = mEditTextEmail.getText().toString().trim();
+                    String password = mEditTextPassword.getText().toString().trim();
+                    String username = mEditTextUsername.getText().toString().trim();
+                    if (!email.isEmpty()) {
+                        if (!password.isEmpty()) {
+                            if (!username.isEmpty()) {
+                                // do shit
+                                Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Registering user.", Snackbar.LENGTH_LONG).show();
+                                mLinearLayoutLoginForm.setVisibility(View.GONE);
+                                mProgressBarLogin.setVisibility(View.VISIBLE);
+
+                                picWizBackend.register(email, password, username);
+                                countDownTimer.start();
+
+                                Log.i("register: ", "Done");
+                            } else {
+                                mEditTextUsername.setError(getString(R.string.error_username_empty));
+                                mEditTextUsername.requestFocus();
+                            }
+                        } else {
+                            mEditTextPassword.setError(getString(R.string.error_password_empty));
+                            mEditTextPassword.requestFocus();
+                        }
+                    } else {
+                        mEditTextEmail.setError(getString(R.string.error_email_empty));
+                        mEditTextEmail.requestFocus();
+                    }
                     Toast.makeText(LoginActivity.this, "Registering", Toast.LENGTH_SHORT).show();
                 } else {
                     // proceed with sign in
@@ -89,30 +141,15 @@ public class LoginActivity extends AppCompatActivity {
                     if (!email.isEmpty()) {
                         if (!password.isEmpty()) {
                             Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Signing in", Snackbar.LENGTH_LONG).show();
-                            Animation fadeOut = AnimationUtils.loadAnimation(LoginActivity.this, R.anim.fade_out);
-                            mLinearLayoutLoginForm.startAnimation(fadeOut);
                             mLinearLayoutLoginForm.setVisibility(View.GONE);
-                            fadeOut.setAnimationListener(new Animation.AnimationListener() {
-                                @Override
-                                public void onAnimationStart(Animation animation) {
-
-                                }
-
-                                @Override
-                                public void onAnimationEnd(Animation animation) {
-                                    mProgressBarLogin.setVisibility(View.VISIBLE);
-                                }
-
-                                @Override
-                                public void onAnimationRepeat(Animation animation) {
-
-                                }
-                            });
+                            mProgressBarLogin.setVisibility(View.VISIBLE);
                         } else {
                             mEditTextPassword.setError(getString(R.string.error_password_empty));
+                            mEditTextPassword.requestFocus();
                         }
                     } else {
                         mEditTextEmail.setError(getString(R.string.error_email_empty));
+                        mEditTextEmail.requestFocus();
                     }
                 }
             }
