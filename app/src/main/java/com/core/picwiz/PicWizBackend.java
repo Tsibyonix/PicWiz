@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -27,6 +28,8 @@ public class PicWizBackend implements MyEventListener {
     private String message = "Unknown Error";
     private String host = "none";
     private String id = null;
+    private String username = null;
+    private String service = null;
 
     public PicWizBackend(Context context) {
         this.context = context;
@@ -49,8 +52,16 @@ public class PicWizBackend implements MyEventListener {
         return id;
     }
 
+    public String getUsername() {
+        return username;
+    }
+
     public Boolean getWait() {
         return responseReceived;
+    }
+
+    public String getService() {
+        return service;
     }
 
     public void setResponseReceivedFalse() {
@@ -58,9 +69,21 @@ public class PicWizBackend implements MyEventListener {
     }
 
     public void register(String email, String password, String username) {
+        service = "register";
         Log.i("register: ", "function init");
-        RegisterTask registerTask = new RegisterTask(this, email, password, username);
+        Task registerTask = new Task(this, email, password, username);
         registerTask.execute((Void) null);
+    }
+
+    public void login(String email, String password) {
+        service = "login";
+        Log.i("login: ", "function init");
+        Task loginTest = new Task(this, email, password);
+        loginTest.execute((Void) null);
+    }
+
+    public void resetBackend() {
+
     }
 
     @Override
@@ -69,9 +92,13 @@ public class PicWizBackend implements MyEventListener {
             message = jsonObject.getString("message");
             success = jsonObject.getInt("success");
             host = jsonObject.getString("host");
-            if (success == 1)
+            if (success == 1) {
                 id = jsonObject.getString("id");
-        } catch (JSONException e) {
+                if (Objects.equals(service, "register"))
+                    username = jsonObject.getString("username");
+            }
+        }
+        catch (JSONException e) {
             e.printStackTrace();
             Log.i("register: ", e.getMessage());
         }
@@ -98,21 +125,33 @@ public class PicWizBackend implements MyEventListener {
         responseReceived = false;
     }
 
-    class RegisterTask extends AsyncTask<Void, Void, String> {
+    class Task extends AsyncTask<Void, Void, String> {
         private MyEventListener callback;
         String email = null;
         String password = null;
         String username = null;
 
-        public RegisterTask(MyEventListener cb, String email, String password, String username) {
+        public Task(MyEventListener cb, String email, String password, String username) {
             callback = cb;
             this.email = email;
             this.password = password;
             this.username = username;
         }
 
+        public Task(MyEventListener cb, String email, String password) {
+            callback = cb;
+            this.email = email;
+            this.password = password;
+        }
+
         private String run() throws IOException {
-            String url = "http://192.168.1.4:8000/register?email="+email+"&password="+password+"&username="+username;
+            String url;
+            if (Objects.equals(service, "register")) {
+                url = "http://192.168.1.4:8000/register?email=" + email + "&password=" + password + "&username=" + username;
+            } else {
+                url = "http://192.168.1.4:8000/login?email=" + email + "&password=" + password;
+            }
+
             Log.i("register: ", "in run: "+url);
             Request register = new Request.Builder()
                     .url(url)

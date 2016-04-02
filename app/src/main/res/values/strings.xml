@@ -2,6 +2,9 @@
     <string name="app_name">PicWiz</string>
     <string name="logo">logo</string>
 
+    <string name="drawer_open">open</string>
+    <string name="drawer_close">close</string>
+
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
     <string name="prompt_username">Username</string>

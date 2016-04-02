@@ -1,8 +1,8 @@
 package com.core.picwiz;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
@@ -20,7 +20,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import java.util.Objects;
 
 public class LoginActivity extends AppCompatActivity {
     private String ID;
@@ -95,7 +96,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (picWizBackend.getWait()) {
                     Log.i("while: ", picWizBackend.getSuccess()+": "+picWizBackend.getMessage());
                     this.cancel();
-                    attemptRegister();
+                    postRequest();
                 }
             }
 
@@ -147,11 +148,16 @@ public class LoginActivity extends AppCompatActivity {
                     // proceed with sign in
                     String email = mEditTextEmail.getText().toString();
                     String password = mEditTextPassword.getText().toString();
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                     if (!email.isEmpty()) {
                         if (!password.isEmpty()) {
+                            inputEmail = email;
                             Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Signing in", Snackbar.LENGTH_LONG).show();
                             mLinearLayoutLoginForm.setVisibility(View.GONE);
                             mProgressBarLogin.setVisibility(View.VISIBLE);
+                            picWizBackend.login(email, password);
+                            countDownTimer.start();
                         } else {
                             mEditTextPassword.setError(getString(R.string.error_password_empty));
                             mEditTextPassword.requestFocus();
@@ -179,15 +185,18 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void attemptRegister() {
+    private void postRequest() {
         picWizBackend.setResponseReceivedFalse();
         String message = picWizBackend.getMessage();
         String host = picWizBackend.getHost();
         int success = picWizBackend.getSuccess();
+        String service = picWizBackend.getService();
         String id = null;
-        if (success == 1)
+        if (success == 1) {
             id = picWizBackend.getId();
-
+            if (Objects.equals(service, "register"))
+                inputUsername = picWizBackend.getUsername();
+        }
         if (success == 0) {
             mLinearLayoutLoginForm.setVisibility(View.VISIBLE);
             switch (host) {
@@ -202,12 +211,16 @@ public class LoginActivity extends AppCompatActivity {
                 case "password":
                     mEditTextPassword.setError(message);
                     mEditTextPassword.requestFocus();
+                    break;
+                default:
+                    Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), message, Snackbar.LENGTH_LONG).show();
             }
         } else {
             settings.edit().putString("USER_ID", id).apply();
             settings.edit().putString("EMAIL", inputEmail).apply();
             settings.edit().putString("USERNAME", inputUsername).apply();
-            //add new activity
+            Intent mainIntent = new Intent(LoginActivity.this, HomeActivity.class);
+            LoginActivity.this.startActivity(mainIntent);
             finish();
         }
     }
@@ -231,10 +244,13 @@ public class LoginActivity extends AppCompatActivity {
                 if (ID == null) {
                     fieldAnimation(fadeIn);
                 } else {
+                    Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Logging in as: " + email, Snackbar.LENGTH_INDEFINITE).show();
                     // get the user ID authenticated, and show the snack. If authentication fails,
                     // clear the 'email' and 'id' in the sharedPref and set ID = null.
                     // recall animation() and pass true, this will stop the img logo from animation and fadein the fields.
-                    Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Logging in as: " + email, Snackbar.LENGTH_INDEFINITE).show();
+                    Intent mainIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                    LoginActivity.this.startActivity(mainIntent);
+                    finish();
                 }
             }
 
