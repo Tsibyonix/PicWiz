@@ -9,7 +9,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.core.picwiz.LoginActivity">
+    tools:context="com.core.picwiz.LoginActivity"
+    android:background="@color/colorPrimary">
 
     <ScrollView
         android:id="@+id/scroll_view_login_form"

@@ -94,7 +94,7 @@ public class PicWizBackend implements MyEventListener {
             host = jsonObject.getString("host");
             if (success == 1) {
                 id = jsonObject.getString("id");
-                if (Objects.equals(service, "register"))
+                if (Objects.equals(service, "login"))
                     username = jsonObject.getString("username");
             }
         }

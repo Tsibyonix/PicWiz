@@ -26,6 +26,7 @@ import java.util.Objects;
 public class LoginActivity extends AppCompatActivity {
     private String ID;
     private String email;
+    private String username;
 
     private String inputEmail;
     private String inputUsername;
@@ -85,6 +86,8 @@ public class LoginActivity extends AppCompatActivity {
         //settings.edit().putString("USER_ID", "test").apply();
         ID = settings.getString("USER_ID", null);
         email = settings.getString("EMAIL", null);
+        username = settings.getString("USERNAME", null);
+        Log.i("Shared prefs: ", email+ ":" +username);
 
         animation(false);
 
@@ -194,7 +197,7 @@ public class LoginActivity extends AppCompatActivity {
         String id = null;
         if (success == 1) {
             id = picWizBackend.getId();
-            if (Objects.equals(service, "register"))
+            if (Objects.equals(service, "login"))
                 inputUsername = picWizBackend.getUsername();
         }
         if (success == 0) {
@@ -220,6 +223,8 @@ public class LoginActivity extends AppCompatActivity {
             settings.edit().putString("EMAIL", inputEmail).apply();
             settings.edit().putString("USERNAME", inputUsername).apply();
             Intent mainIntent = new Intent(LoginActivity.this, HomeActivity.class);
+            //mainIntent.putExtra("email", inputEmail);
+            //mainIntent.putExtra("username", inputUsername);
             LoginActivity.this.startActivity(mainIntent);
             finish();
         }
@@ -244,11 +249,12 @@ public class LoginActivity extends AppCompatActivity {
                 if (ID == null) {
                     fieldAnimation(fadeIn);
                 } else {
-                    Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Logging in as: " + email, Snackbar.LENGTH_INDEFINITE).show();
                     // get the user ID authenticated, and show the snack. If authentication fails,
                     // clear the 'email' and 'id' in the sharedPref and set ID = null.
                     // recall animation() and pass true, this will stop the img logo from animation and fadein the fields.
                     Intent mainIntent = new Intent(LoginActivity.this, HomeActivity.class);
+                    //mainIntent.putExtra("email", email);
+                    //mainIntent.putExtra("username", username);
                     LoginActivity.this.startActivity(mainIntent);
                     finish();
                 }
