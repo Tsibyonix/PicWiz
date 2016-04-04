@@ -2,6 +2,7 @@ package com.core.picwiz;
 
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -49,10 +50,21 @@ public class HomeActivity extends AppCompatActivity {
         mViewPagerTab.setAdapter(mSectionsPagerAdapter);
 
         Toolbar mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        //CollapsingToolbarLayout collapsingToolbarLayout = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar_layout);
+        //collapsingToolbarLayout.setTitle("test");
         setSupportActionBar(mToolbar);
+
+        int[] tabIconRes = {
+                R.drawable.ic_tab_home,
+                R.drawable.ic_tab_explore,
+                R.drawable.ic_tab_notification,
+                R.drawable.ic_tab_profile
+        };
 
         final TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPagerTab);
+        for (int i = 0; i < tabLayout.getTabCount(); i++)
+            tabLayout.getTabAt(i).setIcon(tabIconRes[i]);
 
         DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close);
@@ -107,26 +119,34 @@ public class HomeActivity extends AppCompatActivity {
             return 4;
         }
 
+        private String[] tabTitles = {
+                "Home",
+                "Explore",
+                "Activity",
+                "Profile"
+        };
+
         @Override
         public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 0:
-                   return "Home";
-                case 1:
-                    return "Explore";
-                case 2:
-                    return "Notification";
-                case 3:
-                    return "Profile";
-            }
-            return null;
+            //switch (position) {
+            //    case 0:
+            //       return "Home";
+            //    case 1:
+            //        return "Explore";
+            //    case 2:
+            //        return "Notification";
+            //    case 3:
+            //        return "Profile";
+            //}
+            //return null;
 
-            //Drawable image = ContextCompat.getDrawable(HomeActivity.this, R.mipmap.ic_launcher);
+            //Drawable image = ContextCompat.getDrawable(getApplicationContext(), tabIconRes[position]);
             //image.setBounds(0, 0, image.getIntrinsicWidth(), image.getIntrinsicHeight());
-            //SpannableString sb = new SpannableString(" ");
+            //SpannableString sb = new SpannableString(" " + tabTitles[position]);
             //ImageSpan imageSpan = new ImageSpan(image, ImageSpan.ALIGN_BOTTOM);
             //sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             //return sb;
+            return "";
         }
     }
 }

@@ -13,7 +13,6 @@ import android.widget.EditText;
  * A simple {@link Fragment} subclass.
  */
 public class ExploreFragment extends Fragment {
-    private EditText mEditTextExploreSearch;
 
     public static ExploreFragment newInstance(int sectionNumber) {
         return new ExploreFragment();
@@ -30,9 +29,6 @@ public class ExploreFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_explore, container, false);
-
-        mEditTextExploreSearch = (EditText) rootView.findViewById(R.id.edit_text_explore_search);
-        //mEditTextExploreSearch.setVisibility(View.VISIBLE);
 
 
         return rootView;

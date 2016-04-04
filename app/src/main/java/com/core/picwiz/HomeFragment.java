@@ -43,6 +43,7 @@ public class HomeFragment extends Fragment {
         mRecyclerViewHomeFragment = (RecyclerView) view.findViewById(R.id.recycler_view_home_fragment);
         homeRecyclerViewAdapter = new HomeRecyclerViewAdapter(getActivity(), homeRecyclerLists);
         mRecyclerViewHomeFragment.setAdapter(homeRecyclerViewAdapter);
+        mRecyclerViewHomeFragment.setHasFixedSize(false);
         mRecyclerViewHomeFragment.setLayoutManager(new LinearLayoutManager(getActivity()));
         return view;
     }
