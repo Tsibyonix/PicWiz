@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:cardView="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/card_view">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:id="@+id/imageView"
+                android:src="@mipmap/ic_launcher"
+                android:layout_gravity="left" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_view_username_card_view"
+                    android:paddingStart="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="\@username"
+                    android:textStyle="bold"
+                    android:textColor="#000000" />
+
+                <TextView
+                    android:id="@+id/text_view_tag_line_card_view"
+                    android:paddingStart="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="tag line" />
+
+                <TextView
+                    android:id="@+id/text_view_time_card_view"
+                    android:paddingStart="4dp"
+                    android:textColor="#ccc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="time" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <TextView
+
+            android:id="@+id/text_view_tags_card_view"
+            android:paddingTop="8dp"
+            android:paddingBottom="4dp"
+            android:paddingStart="4dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="#tag #for #the #picture"
+            android:lines="1" />
+
+        <ImageView
+
+            android:id="@+id/image_view_picture_card_view"
+            android:layout_width="wrap_content"
+            android:layout_height="256dp"
+            android:src="@drawable/im_header"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:id="@+id/text_view_caption_card_view"
+            android:paddingTop="16dp"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This is the caption for the picture, You can disable the pic and just have the caption"
+            android:gravity="left" />
+
+    </LinearLayout>
+
+</android.support.v7.widget.CardView>
