@@ -1,13 +1,16 @@
 package com.core.picwiz;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -19,10 +22,15 @@ import android.text.SpannableString;
 import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewParent;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class HomeActivity extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener{
     private SharedPreferences settings;
     private String email;
     private String username;
@@ -31,6 +39,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private TextView mTextViewHeaderEmail;
     private TextView mTextViewHeaderUsername;
+    //private Le
 
     private ViewPager mViewPagerTab;
     private SectionsPagerAdapter mSectionsPagerAdapter;
@@ -68,14 +77,31 @@ public class HomeActivity extends AppCompatActivity {
 
         DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         toggle = new ActionBarDrawerToggle(this, drawerLayout, mToolbar, R.string.drawer_open, R.string.drawer_close);
-        drawerLayout.setDrawerListener(toggle);
+        drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
 
         mTextViewHeaderUsername = (TextView) drawerLayout.findViewById(R.id.header_name_textView);
         mTextViewHeaderEmail = (TextView) drawerLayout.findViewById(R.id.header_email_textView);
 
-        //mViewPagerTab.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-        //});
+        mViewPagerTab.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                LinearLayout linearLayout = (LinearLayout) findViewById(R.id.social_button);
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
 
         Log.i("Shared prefs: ", email + ":" + username);
         //mTextViewHeaderUsername.setText("fer");
@@ -83,10 +109,22 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+    public boolean onNavigationItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        switch (id) {
+            case R.id.profile_setting:
+                Toast.makeText(getApplicationContext(), "Profile settings", Toast.LENGTH_SHORT).show();
+                Intent secondaryIntent = new Intent(HomeActivity.this, SecondaryActivity.class);
+                secondaryIntent.putExtra("toLoad", "profile_settings");
+                HomeActivity.this.startActivity(secondaryIntent);
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+
         return true;
+
     }
 
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
@@ -108,7 +146,7 @@ public class HomeActivity extends AppCompatActivity {
                 case 2:
                     return NotificationFragment.newInstance(position);
                 case 3:
-                    return ProfileFragment.newInstance(position);
+                    return ProfileFragment.newInstance(HomeActivity.this, position);
             }
             return null;
         }

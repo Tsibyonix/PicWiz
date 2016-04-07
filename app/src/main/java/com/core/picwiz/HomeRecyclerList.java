@@ -10,14 +10,17 @@ public class HomeRecyclerList {
     public String tags;
     public int photoId;
     public String caption;
+    public String location;
+    public String comments;
 
-    HomeRecyclerList(String username, String tagLine, String time, String tags, int photoId, String caption) {
+    HomeRecyclerList(String username, String tagLine, String time, String tags, int photoId, String caption, String location, String comments) {
         this.username = username;
         this.tagLine = tagLine;
         this.time = time;
         this.tags = tags;
         this.photoId = photoId;
         this.caption = caption;
+        this.location = location;
+        this.comments = comments;
     }
-
 }

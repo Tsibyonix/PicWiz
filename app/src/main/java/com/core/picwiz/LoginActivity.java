@@ -3,10 +3,13 @@ package com.core.picwiz;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.CountDownTimer;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,7 +24,9 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.security.Permission;
 import java.util.Objects;
+import java.util.jar.Manifest;
 
 public class LoginActivity extends AppCompatActivity {
     private String ID;
@@ -114,64 +119,89 @@ public class LoginActivity extends AppCompatActivity {
         mButtonSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (register) {
-                    // proceed with register
-                    mEditTextEmail.setError(null);
-                    mEditTextUsername.setError(null);
-                    mEditTextPassword.setError(null);
-                    String email = mEditTextEmail.getText().toString().trim();
-                    String password = mEditTextPassword.getText().toString().trim();
-                    String username = mEditTextUsername.getText().toString().trim();
-                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    if (!email.isEmpty()) {
-                        if (!password.isEmpty()) {
-                            if (!username.isEmpty()) {
-                                // do shit
-                                inputEmail = email;
-                                inputUsername = username;
-                                mLinearLayoutLoginForm.setVisibility(View.GONE);
-                                mProgressBarLogin.setVisibility(View.VISIBLE);
+                int permissionCheck = ContextCompat.checkSelfPermission(LoginActivity.this, android.Manifest.permission.INTERNET);
+                if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        requestPermissions(new String[] {android.Manifest.permission.INTERNET}, 1);
+                    }
+                    return;
+                } else {
+                    if (register) {
+                        // proceed with register
+                        mEditTextEmail.setError(null);
+                        mEditTextUsername.setError(null);
+                        mEditTextPassword.setError(null);
+                        String email = mEditTextEmail.getText().toString().trim();
+                        String password = mEditTextPassword.getText().toString().trim();
+                        String username = mEditTextUsername.getText().toString().trim();
+                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                        if (!email.isEmpty()) {
+                            if (!password.isEmpty()) {
+                                if (!username.isEmpty()) {
+                                    // do shit
+                                    inputEmail = email;
+                                    inputUsername = username;
+                                    mLinearLayoutLoginForm.setVisibility(View.GONE);
+                                    mProgressBarLogin.setVisibility(View.VISIBLE);
 
-                                picWizBackend.register(email, password, username);
-                                countDownTimer.start();
+                                    picWizBackend.register(email, password, username);
+                                    countDownTimer.start();
+                                } else {
+                                    mEditTextUsername.setError(getString(R.string.error_username_empty));
+                                    mEditTextUsername.requestFocus();
+                                }
                             } else {
-                                mEditTextUsername.setError(getString(R.string.error_username_empty));
-                                mEditTextUsername.requestFocus();
+                                mEditTextPassword.setError(getString(R.string.error_password_empty));
+                                mEditTextPassword.requestFocus();
                             }
                         } else {
-                            mEditTextPassword.setError(getString(R.string.error_password_empty));
-                            mEditTextPassword.requestFocus();
+                            mEditTextEmail.setError(getString(R.string.error_email_empty));
+                            mEditTextEmail.requestFocus();
                         }
                     } else {
-                        mEditTextEmail.setError(getString(R.string.error_email_empty));
-                        mEditTextEmail.requestFocus();
-                    }
-                } else {
-                    // proceed with sign in
-                    String email = mEditTextEmail.getText().toString();
-                    String password = mEditTextPassword.getText().toString();
-                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                    if (!email.isEmpty()) {
-                        if (!password.isEmpty()) {
-                            inputEmail = email;
-                            Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Signing in", Snackbar.LENGTH_LONG).show();
-                            mLinearLayoutLoginForm.setVisibility(View.GONE);
-                            mProgressBarLogin.setVisibility(View.VISIBLE);
-                            picWizBackend.login(email, password);
-                            countDownTimer.start();
+                        // proceed with sign in
+                        String email = mEditTextEmail.getText().toString();
+                        String password = mEditTextPassword.getText().toString();
+                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                        if (!email.isEmpty()) {
+                            if (!password.isEmpty()) {
+                                inputEmail = email;
+                                Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Signing in", Snackbar.LENGTH_LONG).show();
+                                mLinearLayoutLoginForm.setVisibility(View.GONE);
+                                mProgressBarLogin.setVisibility(View.VISIBLE);
+                                picWizBackend.login(email, password);
+                                countDownTimer.start();
+                            } else {
+                                mEditTextPassword.setError(getString(R.string.error_password_empty));
+                                mEditTextPassword.requestFocus();
+                            }
                         } else {
-                            mEditTextPassword.setError(getString(R.string.error_password_empty));
-                            mEditTextPassword.requestFocus();
+                            mEditTextEmail.setError(getString(R.string.error_email_empty));
+                            mEditTextEmail.requestFocus();
                         }
-                    } else {
-                        mEditTextEmail.setError(getString(R.string.error_email_empty));
-                        mEditTextEmail.requestFocus();
                     }
                 }
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case 1:
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission Granted
+                } else {
+                    // Permission Denied
+                    Snackbar.make(mCoordinationLayoutMainLayout.getRootView(), "Internet permission revoked.", Snackbar.LENGTH_INDEFINITE).show();
+                    mLinearLayoutLoginForm.setVisibility(View.GONE);
+                }
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
     public void onRegister(View view) {
@@ -195,10 +225,16 @@ public class LoginActivity extends AppCompatActivity {
         int success = picWizBackend.getSuccess();
         String service = picWizBackend.getService();
         String id = null;
+        String name = null;
+        String tagline = null;
         if (success == 1) {
             id = picWizBackend.getId();
-            if (Objects.equals(service, "login"))
+            if (Objects.equals(service, "login")) {
                 inputUsername = picWizBackend.getUsername();
+                name = picWizBackend.getName();
+                tagline = picWizBackend.getTagline();
+
+            }
         }
         if (success == 0) {
             mLinearLayoutLoginForm.setVisibility(View.VISIBLE);
@@ -222,6 +258,8 @@ public class LoginActivity extends AppCompatActivity {
             settings.edit().putString("USER_ID", id).apply();
             settings.edit().putString("EMAIL", inputEmail).apply();
             settings.edit().putString("USERNAME", inputUsername).apply();
+            settings.edit().putString("NAME", name).apply();
+            settings.edit().putString("TAGLINE", tagline).apply();
             Intent mainIntent = new Intent(LoginActivity.this, HomeActivity.class);
             //mainIntent.putExtra("email", inputEmail);
             //mainIntent.putExtra("username", inputUsername);

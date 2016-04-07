@@ -29,6 +29,8 @@ public class PicWizBackend implements MyEventListener {
     private String host = "none";
     private String id = null;
     private String username = null;
+    private String name = null;
+    private String tagline = null;
     private String service = null;
 
     public PicWizBackend(Context context) {
@@ -56,6 +58,14 @@ public class PicWizBackend implements MyEventListener {
         return username;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getTagline() {
+        return tagline;
+    }
+
     public Boolean getWait() {
         return responseReceived;
     }
@@ -68,18 +78,32 @@ public class PicWizBackend implements MyEventListener {
         responseReceived = false;
     }
 
+    private static final String[] servicesProvied = {
+            "register",
+            "login",
+            "update",
+            "authenticate"
+    };
+
     public void register(String email, String password, String username) {
-        service = "register";
+        service = servicesProvied[0];
         Log.i("register: ", "function init");
         Task registerTask = new Task(this, email, password, username);
         registerTask.execute((Void) null);
     }
 
     public void login(String email, String password) {
-        service = "login";
+        service = servicesProvied[1];
         Log.i("login: ", "function init");
-        Task loginTest = new Task(this, email, password);
-        loginTest.execute((Void) null);
+        Task loginTask = new Task(this, email, password);
+        loginTask.execute((Void) null);
+    }
+
+    public void update(String email, String name, String tagline) {
+        service =  servicesProvied[2];
+        Log.i("update: ", "function init");
+        Task updateTask = new Task(this, email, name, tagline, null);
+        updateTask.execute((Void) null);
     }
 
     public void resetBackend() {
@@ -89,13 +113,30 @@ public class PicWizBackend implements MyEventListener {
     @Override
     public void onEventCompleted(JSONObject jsonObject) {
         try {
-            message = jsonObject.getString("message");
-            success = jsonObject.getInt("success");
-            host = jsonObject.getString("host");
-            if (success == 1) {
-                id = jsonObject.getString("id");
-                if (Objects.equals(service, "login"))
-                    username = jsonObject.getString("username");
+            switch (service) {
+                case "register":
+                    message = jsonObject.getString("message");
+                    success = jsonObject.getInt("success");
+                    host = jsonObject.getString("host");
+                    if (success == 1)
+                        id = jsonObject.getString("id");
+                    break;
+                case "login":
+                    message = jsonObject.getString("message");
+                    success = jsonObject.getInt("success");
+                    host = jsonObject.getString("host");
+                    if (success == 1) {
+                        id = jsonObject.getString("id");
+                        username = jsonObject.getString("username");
+                        name = jsonObject.getString("name");
+                        tagline = jsonObject.getString("tagline");
+                    }
+                    break;
+                case "update":
+                    message = jsonObject.getString("message");
+                    success = jsonObject.getInt("success");
+                    host = jsonObject.getString("host");
+                    break;
             }
         }
         catch (JSONException e) {
@@ -130,32 +171,46 @@ public class PicWizBackend implements MyEventListener {
         String email = null;
         String password = null;
         String username = null;
+        String name = null;
+        String tagline = null;
 
-        public Task(MyEventListener cb, String email, String password, String username) {
+        public Task(MyEventListener cb, String arg1, String arg2, String arg3) {
             callback = cb;
-            this.email = email;
-            this.password = password;
-            this.username = username;
+            this.email = arg1;
+            this.password = arg2;
+            this.username = arg3;
         }
 
-        public Task(MyEventListener cb, String email, String password) {
+        public Task(MyEventListener cb, String arg1, String arg2) {
             callback = cb;
-            this.email = email;
-            this.password = password;
+            this.email = arg1;
+            this.password = arg2;
+        }
+
+        public Task(MyEventListener cb, String arg1, String arg2, String arg3, String arg4) {
+            callback = cb;
+            this.email = arg1;
+            this.name = arg2;
+            this.tagline = arg3;
         }
 
         private String run() throws IOException {
-            String url;
-            if (Objects.equals(service, "register")) {
-                url = "http://192.168.1.4:8000/register?email=" + email + "&password=" + password + "&username=" + username;
-            } else {
-                url = "http://192.168.1.4:8000/login?email=" + email + "&password=" + password;
+            String url = null;
+            switch (service) {
+                case "register":
+                    url = "http://192.168.1.4:8000/register?email=" + email + "&password=" + password + "&username=" + username;
+                    break;
+                case "login":
+                    url = "http://192.168.1.4:8000/login?email=" + email + "&password=" + password;
+                    break;
+                case "update":
+                    url =  "http://192.168.1.4:8000/update?email=" + email + "&name=" + name + "&tagline=" + tagline;
+                    break;
             }
 
             Log.i("register: ", "in run: "+url);
             Request register = new Request.Builder()
                     .url(url)
-                    // http://192.168.1.4:8000/register?email=san@san&password=123456&username=chronix
                     .build();
             Response registerResponse = client.newCall(register).execute();
             if (!registerResponse.isSuccessful()) throw new IOException("Unexpected code " + registerResponse);

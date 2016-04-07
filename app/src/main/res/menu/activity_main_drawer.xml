@@ -7,7 +7,14 @@
                 android:id="@+id/nav_post"
                 android:icon="@mipmap/ic_launcher"
                 android:title="Post" />
-
+        </menu>
+    </item>
+    <item android:title="Settings">
+        <menu>
+            <item
+                android:id="@+id/profile_setting"
+                android:icon="@drawable/ic_tab_profile"
+                android:title="Account Settings" />
         </menu>
     </item>
 

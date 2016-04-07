@@ -21,4 +21,11 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="prompt_name">Name</string>
+    <string name="prompt_tagline">Tag Line</string>
+    <string name="prompt_bio">Bio</string>
+    <string name="action_done">Done</string>
+    <string name="prompt_acc_settings">Account settings</string>
+    <string name="prompt_tags">Tags</string>
+    <string name="prompt_caption">Caption</string>
 </resources>

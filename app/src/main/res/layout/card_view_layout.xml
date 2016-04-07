@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.v7.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:animateLayoutChanges="true"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/card_view">
 
     <LinearLayout
+        android:animateLayoutChanges="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
+        android:padding="8dp"
         android:orientation="vertical">
 
         <LinearLayout
@@ -59,8 +60,8 @@
         </LinearLayout>
 
         <TextView
-
             android:id="@+id/text_view_tags_card_view"
+            android:drawableTint="#939393"
             android:paddingTop="8dp"
             android:paddingBottom="4dp"
             android:paddingStart="4dp"
@@ -72,7 +73,7 @@
         <ImageView
             android:id="@+id/image_view_picture_card_view"
             android:layout_width="wrap_content"
-            android:layout_height="256dp"
+            android:layout_height="320dp"
             android:src="@drawable/im_header"
             android:scaleType="centerCrop" />
 
@@ -87,20 +88,102 @@
             android:text="This is the caption for the picture, You can disable the pic and just have the caption"
             android:gravity="left" />
 
-        <com.like.LikeButton
+        <android.support.design.widget.TextInputLayout
+            android:visibility="gone"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:id="@+id/text_input_layout_comment_card_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/edit_text_comment_card_view"
+                android:hint="Add comment"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <TextView
+            android:id="@+id/text_view_location"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:drawableStart="@drawable/ic_my_location"
+            android:text=" Pahar Gunj, New Delhi"
             android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:icon_type="star"
-            app:circle_start_color="@color/colorPrimary"
-            app:like_drawable="@drawable/thumb_on"
-            app:unlike_drawable="@drawable/thumb_off"
-            app:dots_primary_color="@color/colorAccent"
-            app:dots_secondary_color="@color/colorPrimary"
-            app:circle_end_color="@color/colorAccent"
-            app:icon_size="25dp"
-            app:liked="false"
-            app:anim_scale_factor="2"
-            app:enabled="true" />
+            android:orientation="horizontal">
+
+            <RelativeLayout
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.like.LikeButton
+                    android:id="@+id/like_button_card_view"
+                    android:layout_centerInParent="true"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:icon_type="star"
+                    app:circle_start_color="@color/colorPrimary"
+                    app:like_drawable="@drawable/thumb_on"
+                    app:unlike_drawable="@drawable/thumb_off"
+                    app:dots_primary_color="@color/colorAccent"
+                    app:dots_secondary_color="@color/colorPrimary"
+                    app:circle_end_color="@color/colorAccent"
+                    app:icon_size="18dp"
+                    app:liked="false"
+                    app:anim_scale_factor="2"
+                    app:enabled="true" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_centerInParent="true"
+                    android:id="@+id/text_view_direction"
+                    android:textColor="#E42263"
+                    android:drawableTint="#7AA410"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:drawableLeft="@drawable/ic_directions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_gravity="center"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_centerInParent="true"
+                    android:id="@+id/text_view_comment"
+                    android:textColor="#E42263"
+                    android:drawableTint="#E42263"
+                    android:text=" 0"
+                    android:textStyle="bold"
+                    android:textSize="18sp"
+                    android:drawableLeft="@drawable/ic_comment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </RelativeLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
