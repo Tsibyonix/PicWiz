@@ -32,6 +32,8 @@ public class PicWizBackend implements MyEventListener {
     private String name = null;
     private String tagline = null;
     private String service = null;
+    private int followers = 0;
+    private int following = 0;
 
     public PicWizBackend(Context context) {
         this.context = context;
@@ -64,6 +66,14 @@ public class PicWizBackend implements MyEventListener {
 
     public String getTagline() {
         return tagline;
+    }
+
+    public int getFollowers() {
+        return followers;
+    }
+
+    public int getFollowing() {
+        return following;
     }
 
     public Boolean getWait() {
@@ -130,6 +140,9 @@ public class PicWizBackend implements MyEventListener {
                         username = jsonObject.getString("username");
                         name = jsonObject.getString("name");
                         tagline = jsonObject.getString("tagline");
+                        followers = jsonObject.getInt("follower");
+                        following = jsonObject.getInt("following");
+                        Log.i("followers: following, ", String.valueOf(followers)+": "+String.valueOf(following));
                     }
                     break;
                 case "update":
@@ -152,6 +165,7 @@ public class PicWizBackend implements MyEventListener {
 
         if (jsonObject == null) {
             message = "Unknown Error occurred, no response from server.";
+            host = "None";
             success = 0;
         } else {
             try {
@@ -233,6 +247,10 @@ public class PicWizBackend implements MyEventListener {
         @Override
         protected void onPostExecute(final String s) {
             super.onPostExecute(s);
+            if (s == null) {
+                callback.onEventFailed(null);
+                return;
+            }
             try {
                 JSONObject jsonObject = new JSONObject(s);
                 callback.onEventCompleted(jsonObject);

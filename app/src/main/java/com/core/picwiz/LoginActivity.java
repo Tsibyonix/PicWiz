@@ -1,5 +1,6 @@
 package com.core.picwiz;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -54,6 +55,8 @@ public class LoginActivity extends AppCompatActivity {
     private EditText mEditTextPassword;
     private EditText mEditTextUsername;
 
+    private ProgressDialog progressDialog;
+
     private Button mButtonSignIn;
     private TextView mTextViewRegister;
 
@@ -67,6 +70,7 @@ public class LoginActivity extends AppCompatActivity {
 
         settings = getSharedPreferences("config", MODE_PRIVATE);
 
+        progressDialog = new ProgressDialog(this);
         mImageViewLogo = (ImageView) findViewById(R.id.image_view_logo);
         mProgressBarLogin = (ProgressBar) findViewById(R.id.progress_bar_login);
 
@@ -103,6 +107,7 @@ public class LoginActivity extends AppCompatActivity {
                 Log.i("time", String.valueOf(millisUntilFinished));
                 if (picWizBackend.getWait()) {
                     Log.i("while: ", picWizBackend.getSuccess()+": "+picWizBackend.getMessage());
+                    progressDialog.hide();
                     this.cancel();
                     postRequest();
                 }
@@ -111,6 +116,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 timeout = true;
+                progressDialog.hide();
                 Log.i("time", "Clock finished");
                 this.cancel();
             }
@@ -144,8 +150,8 @@ public class LoginActivity extends AppCompatActivity {
                                     inputUsername = username;
                                     mLinearLayoutLoginForm.setVisibility(View.GONE);
                                     mProgressBarLogin.setVisibility(View.VISIBLE);
-
                                     picWizBackend.register(email, password, username);
+                                    progressDialog.show();
                                     countDownTimer.start();
                                 } else {
                                     mEditTextUsername.setError(getString(R.string.error_username_empty));
@@ -172,6 +178,7 @@ public class LoginActivity extends AppCompatActivity {
                                 mLinearLayoutLoginForm.setVisibility(View.GONE);
                                 mProgressBarLogin.setVisibility(View.VISIBLE);
                                 picWizBackend.login(email, password);
+                                progressDialog.show();
                                 countDownTimer.start();
                             } else {
                                 mEditTextPassword.setError(getString(R.string.error_password_empty));
@@ -227,13 +234,17 @@ public class LoginActivity extends AppCompatActivity {
         String id = null;
         String name = null;
         String tagline = null;
+        int followers = 1;
+        int following = 0;
         if (success == 1) {
             id = picWizBackend.getId();
             if (Objects.equals(service, "login")) {
                 inputUsername = picWizBackend.getUsername();
                 name = picWizBackend.getName();
                 tagline = picWizBackend.getTagline();
-
+                followers = picWizBackend.getFollowers();
+                following = picWizBackend.getFollowing();
+                Log.i("followers: following, ", String.valueOf(followers)+": "+String.valueOf(following));
             }
         }
         if (success == 0) {
@@ -260,6 +271,8 @@ public class LoginActivity extends AppCompatActivity {
             settings.edit().putString("USERNAME", inputUsername).apply();
             settings.edit().putString("NAME", name).apply();
             settings.edit().putString("TAGLINE", tagline).apply();
+            settings.edit().putString("FOLLOWERS", String.valueOf(followers)).apply();
+            settings.edit().putString("FOLLOWING", String.valueOf(following)).apply();
             Intent mainIntent = new Intent(LoginActivity.this, HomeActivity.class);
             //mainIntent.putExtra("email", inputEmail);
             //mainIntent.putExtra("username", inputUsername);

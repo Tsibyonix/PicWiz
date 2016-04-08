@@ -1,8 +1,11 @@
 package com.core.picwiz;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
@@ -29,6 +32,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.github.clans.fab.FloatingActionButton;
+
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener{
     private SharedPreferences settings;
@@ -48,6 +53,7 @@ public class HomeActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+        //if ()
         settings = getSharedPreferences("config", MODE_PRIVATE);
 
         email = settings.getString("EMAIL", null);
@@ -107,6 +113,7 @@ public class HomeActivity extends AppCompatActivity
         //mTextViewHeaderUsername.setText("fer");
         //mTextViewHeaderEmail.setText("email");
     }
+
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {

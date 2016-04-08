@@ -1,6 +1,7 @@
 package com.core.picwiz;
 
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ public class ProfileSettingFragment extends android.app.Fragment {
     private String email;
 
     private boolean timeout;
+    private ProgressDialog progressDialog;
 
     private PicWizBackend picWizBackend;
 
@@ -51,6 +53,7 @@ public class ProfileSettingFragment extends android.app.Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_profile_setting, container, false);
+        progressDialog = new ProgressDialog(getActivity());
         settings = getActivity().getSharedPreferences("config", Context.MODE_PRIVATE);
         mEditTextName = (EditText) view.findViewById(R.id.edit_text_name_settings);
         mEditTextTagline = (EditText) view.findViewById(R.id.edit_text_tagline_settings);
@@ -96,6 +99,7 @@ public class ProfileSettingFragment extends android.app.Fragment {
         switch (id) {
             case R.id.action_done:
                 //async task
+                progressDialog.show();
                 final CountDownTimer countDownTimer = new CountDownTimer(6000, 1000) {
 
                     @Override
@@ -103,6 +107,7 @@ public class ProfileSettingFragment extends android.app.Fragment {
                         Log.i("time", String.valueOf(millisUntilFinished));
                         if (picWizBackend.getWait()) {
                             Log.i("while: ", picWizBackend.getSuccess()+": "+picWizBackend.getMessage());
+                            progressDialog.hide();
                             this.cancel();
                             postRequest();
                         }
@@ -112,6 +117,7 @@ public class ProfileSettingFragment extends android.app.Fragment {
                     public void onFinish() {
                         timeout = true;
                         Log.i("time", "Clock finished");
+                        progressDialog.hide();
                         this.cancel();
                         getActivity().finish();
                     }

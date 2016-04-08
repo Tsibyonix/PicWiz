@@ -1,6 +1,7 @@
 package com.core.picwiz;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -46,6 +47,14 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         holder.caption.setText(homeRecyclerLists.get(position).caption);
         holder.location.setText(homeRecyclerLists.get(position).location);
         holder.comments.setText(homeRecyclerLists.get(position).comments);
+
+        holder.username.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // find a way to start activity from here/
+                //Intent profileViewIntent = new Intent(getClass(), SecondaryActivity.class);
+            }
+        });
 
         holder.comments.setOnClickListener(new View.OnClickListener() {
             @Override

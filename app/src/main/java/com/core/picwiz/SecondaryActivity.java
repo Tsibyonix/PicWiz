@@ -38,6 +38,11 @@ public class SecondaryActivity extends AppCompatActivity {
                         .replace(fragmentContainer.getId(), new PreUploadFragment())
                         .commit();
                 break;
+            case "profile":
+                //getFragmentManager().beginTransaction()
+                  //      .replace(fragmentContainer.getId(), new ProfileFragment())
+                    //    .commit();
+                break;
         }
     }
 
