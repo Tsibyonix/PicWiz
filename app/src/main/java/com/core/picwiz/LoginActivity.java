@@ -274,8 +274,6 @@ public class LoginActivity extends AppCompatActivity {
             settings.edit().putString("FOLLOWERS", String.valueOf(followers)).apply();
             settings.edit().putString("FOLLOWING", String.valueOf(following)).apply();
             Intent mainIntent = new Intent(LoginActivity.this, HomeActivity.class);
-            //mainIntent.putExtra("email", inputEmail);
-            //mainIntent.putExtra("username", inputUsername);
             LoginActivity.this.startActivity(mainIntent);
             finish();
         }

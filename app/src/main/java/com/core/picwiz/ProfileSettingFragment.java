@@ -92,51 +92,55 @@ public class ProfileSettingFragment extends android.app.Fragment {
         }
     }
 
+    void accept() {
+        progressDialog.setTitle("Updating information...");
+        progressDialog.show();
+        final CountDownTimer countDownTimer = new CountDownTimer(6000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.i("time", String.valueOf(millisUntilFinished));
+                if (picWizBackend.getWait()) {
+                    Log.i("while: ", picWizBackend.getSuccess()+": "+picWizBackend.getMessage());
+                    progressDialog.hide();
+                    this.cancel();
+                    postRequest();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                timeout = true;
+                Log.i("time", "Clock finished");
+                progressDialog.hide();
+                this.cancel();
+                getActivity().finish();
+            }
+        };
+
+        name = mEditTextName.getText().toString();
+        tagline = mEditTextTagline.getText().toString();
+        if (name.isEmpty()) {
+            mEditTextName.setError("Name is required");
+            mEditTextName.requestFocus();
+        }
+        else if (tagline.isEmpty()) {
+            mEditTextTagline.setError("Tag line is required");
+            mEditTextTagline.requestFocus();
+        }
+        else {
+            picWizBackend.update(email, name, tagline);
+            countDownTimer.start();
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
         switch (id) {
             case R.id.action_done:
-                //async task
-                progressDialog.show();
-                final CountDownTimer countDownTimer = new CountDownTimer(6000, 1000) {
-
-                    @Override
-                    public void onTick(long millisUntilFinished) {
-                        Log.i("time", String.valueOf(millisUntilFinished));
-                        if (picWizBackend.getWait()) {
-                            Log.i("while: ", picWizBackend.getSuccess()+": "+picWizBackend.getMessage());
-                            progressDialog.hide();
-                            this.cancel();
-                            postRequest();
-                        }
-                    }
-
-                    @Override
-                    public void onFinish() {
-                        timeout = true;
-                        Log.i("time", "Clock finished");
-                        progressDialog.hide();
-                        this.cancel();
-                        getActivity().finish();
-                    }
-                };
-
-                name = mEditTextName.getText().toString();
-                tagline = mEditTextTagline.getText().toString();
-                if (name.isEmpty()) {
-                    mEditTextName.setError("Name is required");
-                    mEditTextName.requestFocus();
-                }
-                else if (tagline.isEmpty()) {
-                    mEditTextTagline.setError("Tag line is required");
-                    mEditTextTagline.requestFocus();
-                }
-                else {
-                    picWizBackend.update(email, name, tagline);
-                    countDownTimer.start();
-                }
+                accept();
                 break;
             case android.R.id.home:
                 getActivity().finish();

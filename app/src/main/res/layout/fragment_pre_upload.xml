@@ -1,4 +1,6 @@
 <LinearLayout
+    android:id="@+id/base_layout"
+    android:animateLayoutChanges="true"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,14 +10,13 @@
 
     <!-- TODO: Update blank fragment layout -->
 
-    <com.core.picwiz.TouchImageView
-        android:src="@drawable/im_header"
+    <com.lyft.android.scissors.CropView
         android:id="@+id/touch_image_view_pre_upload"
-        android:scaleType="centerCrop"
         android:layout_width="match_parent"
         android:layout_height="320dp" />
 
     <LinearLayout
+        android:animateLayoutChanges="true"
         android:orientation="vertical"
         android:padding="16dp"
         android:layout_width="match_parent"
@@ -25,6 +26,20 @@
             android:id="@+id/text_view_location_pre_upload"
             android:drawableLeft="@drawable/ic_my_location"
             android:text=" Fetching location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <CheckBox
+            android:visibility="gone"
+            android:id="@+id/checkbox_general_location"
+            android:text=" General location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/text_view_location_info"
+            android:text="General location hides the accurate location, this is will prevent users from getting near by information"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
@@ -65,6 +80,15 @@
                 android:layout_height="wrap_content" />
 
         </android.support.design.widget.TextInputLayout>
+        <CheckBox
+            android:id="@+id/checkbox_privacy"
+            android:text=" Make picture private"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="Making the picture private will make it visible only to your friends."
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
     </LinearLayout>
 

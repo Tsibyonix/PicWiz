@@ -1,17 +1,25 @@
 package com.core.picwiz;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
+import okhttp3.FormBody;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class PicWizBackend implements MyEventListener {
@@ -34,6 +42,8 @@ public class PicWizBackend implements MyEventListener {
     private String service = null;
     private int followers = 0;
     private int following = 0;
+
+    private static final MediaType MEDIA_TYPE_JPEG = MediaType.parse("image/jpg");
 
     public PicWizBackend(Context context) {
         this.context = context;
@@ -88,38 +98,58 @@ public class PicWizBackend implements MyEventListener {
         responseReceived = false;
     }
 
-    private static final String[] servicesProvied = {
+    private static final String[] servicesProvided = {
             "register",
             "login",
             "update",
-            "authenticate"
+            "authenticate",
+            "post"
     };
 
     public void register(String email, String password, String username) {
-        service = servicesProvied[0];
+        service = servicesProvided[0];
         Log.i("register: ", "function init");
         Task registerTask = new Task(this, email, password, username);
         registerTask.execute((Void) null);
     }
 
     public void login(String email, String password) {
-        service = servicesProvied[1];
+        service = servicesProvided[1];
         Log.i("login: ", "function init");
         Task loginTask = new Task(this, email, password);
         loginTask.execute((Void) null);
     }
 
     public void update(String email, String name, String tagline) {
-        service =  servicesProvied[2];
+        service =  servicesProvided[2];
         Log.i("update: ", "function init");
         Task updateTask = new Task(this, email, name, tagline, null);
         updateTask.execute((Void) null);
     }
 
-    public void resetBackend() {
+    public void createPost(String userID, String tags, String caption, Bitmap image, String location, String privacy, String time) {
+        final MediaType JSON
+                = MediaType.parse("application/json; charset=utf-8");
+        service = servicesProvided[4];
+        Log.i("post: ", "function init");
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        image.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        String imageString = Base64.encodeToString(imageBytes, Base64.URL_SAFE);
+        String json =
+                "{\"image\": \"img-"+time+".jpg\", "
+                + "\"id\": \""+userID+"\", "
+                + "\"tags\": \""+tags+"\", "
+                + "\"caption\": \""+caption+"\", "
+                + "\"location\": \""+location+"\", "
+                + "\"privacy\": \""+privacy+"\", "
+                + "\"time\": \""+time+"\"}";
+        Log.i("json: ", json);
+        RequestBody body = RequestBody.create(JSON, json);
 
+        Task postTask = new Task(this, userID, tags, caption, body,location, privacy, time);
+        postTask.execute((Void) null);
     }
-
     @Override
     public void onEventCompleted(JSONObject jsonObject) {
         try {
@@ -146,6 +176,11 @@ public class PicWizBackend implements MyEventListener {
                     }
                     break;
                 case "update":
+                    message = jsonObject.getString("message");
+                    success = jsonObject.getInt("success");
+                    host = jsonObject.getString("host");
+                    break;
+                case "post":
                     message = jsonObject.getString("message");
                     success = jsonObject.getInt("success");
                     host = jsonObject.getString("host");
@@ -188,6 +223,15 @@ public class PicWizBackend implements MyEventListener {
         String name = null;
         String tagline = null;
 
+        String userID = null;
+        String tags = null;
+        String caption = null;
+        String image = null;
+        String location = null;
+        String privacy = null;
+        String timeStamp = null;
+        RequestBody imageBody;
+
         public Task(MyEventListener cb, String arg1, String arg2, String arg3) {
             callback = cb;
             this.email = arg1;
@@ -208,26 +252,65 @@ public class PicWizBackend implements MyEventListener {
             this.tagline = arg3;
         }
 
+        public Task(MyEventListener cb, String arg1, String arg2, String arg3, RequestBody arg4, String arg5, String arg6, String arg7) {
+            callback = cb;
+            //image = arg4;
+            imageBody = arg4;
+        }
+
         private String run() throws IOException {
             String url = null;
             switch (service) {
                 case "register":
-                    url = "http://192.168.1.4:8000/register?email=" + email + "&password=" + password + "&username=" + username;
+                    HttpUrl.Builder register = HttpUrl.parse("http://192.168.1.4:8000/register").newBuilder();
+                    register.addQueryParameter("email", email);
+                    register.addQueryParameter("password", password);
+                    register.addQueryParameter("username", username);
+                    url = register.build().toString();
+                    Log.i("url: ", url);
                     break;
                 case "login":
-                    url = "http://192.168.1.4:8000/login?email=" + email + "&password=" + password;
+                    HttpUrl.Builder login = HttpUrl.parse("http://192.168.1.4:8000/login").newBuilder();
+                    login.addQueryParameter("email", email);
+                    login.addQueryParameter("password", password);
+                    url = login.build().toString();
+                    Log.i("url: ", url);
                     break;
                 case "update":
-                    url =  "http://192.168.1.4:8000/update?email=" + email + "&name=" + name + "&tagline=" + tagline;
+                    HttpUrl.Builder update = HttpUrl.parse("http://192.168.1.4:8000/update").newBuilder();
+                    update.addQueryParameter("email", email);
+                    update.addQueryParameter("name", name);
+                    update.addQueryParameter("tagline", tagline);
+                    url =  update.build().toString();
+                    Log.i("url: ", url);
+                    break;
+                case "post":
+                    HttpUrl.Builder post = HttpUrl.parse("http://192.168.1.4:8000/post").newBuilder();
+                    //post.addQueryParameter("id", userID);
+                    //post.addQueryParameter("tags", tags);
+                    //post.addQueryParameter("caption", caption);
+                    //post.addQueryParameter("location", location);
+                    //post.addQueryParameter("privacy", privacy);
+                    //post.addQueryParameter("time", timeStamp);
+                    url = post.build().toString();
                     break;
             }
-
-            Log.i("register: ", "in run: "+url);
-            Request register = new Request.Builder()
-                    .url(url)
-                    .build();
+            assert url != null;
+            Request register;
+            if (service == "post") {
+                register = new Request.Builder()
+                        .url(url)
+                        .post(imageBody)
+                        .build();
+                Log.i("url: ", url);
+            } else {
+                register = new Request.Builder()
+                        .url(url)
+                        .build();
+            }
             Response registerResponse = client.newCall(register).execute();
             if (!registerResponse.isSuccessful()) throw new IOException("Unexpected code " + registerResponse);
+            //registerResponse.body().close();
             return registerResponse.body().string();
         }
 

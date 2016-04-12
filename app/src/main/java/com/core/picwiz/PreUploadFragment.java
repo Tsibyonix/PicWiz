@@ -1,6 +1,8 @@
 package com.core.picwiz;
 
 
+import android.app.ProgressDialog;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.location.Address;
 import android.location.Geocoder;
@@ -8,22 +10,31 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.MediaStore;
+import android.os.CountDownTimer;
+import android.os.Environment;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MotionEvent;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -32,17 +43,32 @@ import java.util.Locale;
  * A simple {@link Fragment} subclass.
  */
 public class PreUploadFragment extends android.app.Fragment {
-    String image;
-    private TouchImageView touchImageView;
+    private String image;
+    private LinearLayout baseLayout;
+    private com.lyft.android.scissors.CropView touchImageView;
     private TextView mTextViewLocation;
+    private CheckBox mCheckBoxGeneralLocation;
+    private TextView mTextViewGeneralLocationInfo;
     private EditText mEditTextTags;
+    private EditText mEditTextCaption;
+    private CheckBox mCheckBoxPrivacy;
+    private ProgressDialog progressDialog;
+    private String privacy = "public";
+
+    private boolean timeout = false;
+
+    private SharedPreferences settings;
+    private List<Address> location;
+    private String toSendLocation = null;
 
     private Bitmap imageRaw;
     private Bitmap imageScaled;
 
     private String imagePath;
     private Float Latitude, Longitude;
-    Geocoder geocoder;
+    private Geocoder geocoder;
+
+
 
     private boolean showTick = false;
     private Menu menu;
@@ -69,6 +95,8 @@ public class PreUploadFragment extends android.app.Fragment {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
         geocoder = new Geocoder(getActivity(), Locale.getDefault());
+        settings = getActivity().getSharedPreferences("config", getActivity().MODE_PRIVATE);
+        progressDialog = new ProgressDialog(getActivity());
     }
 
     @Override
@@ -77,29 +105,40 @@ public class PreUploadFragment extends android.app.Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_pre_upload, container, false);
 
-        touchImageView = (TouchImageView) view.findViewById(R.id.touch_image_view_pre_upload);
+        baseLayout = (LinearLayout) view.findViewById(R.id.base_layout);
+        touchImageView = (com.lyft.android.scissors.CropView) view.findViewById(R.id.touch_image_view_pre_upload);
         mTextViewLocation = (TextView) view.findViewById(R.id.text_view_location_pre_upload);
+        mCheckBoxGeneralLocation = (CheckBox) view.findViewById(R.id.checkbox_general_location);
+        mTextViewGeneralLocationInfo = (TextView) view.findViewById(R.id.text_view_location_info);
         mEditTextTags = (EditText) view.findViewById(R.id.edit_text_tag_pre_upload);
-
+        mEditTextCaption = (EditText) view.findViewById(R.id.edit_text_caption_pre_upload);
+        mCheckBoxPrivacy = (CheckBox) view.findViewById(R.id.checkbox_privacy);
         image = getActivity().getIntent().getExtras().getString("image");
         imagePath = getRealPathFromURI(Uri.parse(image));
-        try {
-            imageRaw = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), Uri.parse(image));
-            new BitmapScalar(imageRaw).execute();
-            new GetGeoLocation(imagePath).execute();
+        touchImageView.setImageURI(Uri.parse(image));
+        touchImageView.setDrawingCacheEnabled(true);
+        new GetGeoLocation(imagePath).execute();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.i("Image: ", e.getMessage());
-        }
-
-        mEditTextTags.setOnClickListener(new View.OnClickListener() {
+        mCheckBoxGeneralLocation.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
-                EditText editText = (EditText) v.findViewById(R.id.edit_text_tag_pre_upload);
-                String text = editText.getText().toString();
-                if (text.isEmpty())
-                    editText.setText("#");
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    toSendLocation = location.get(0).getAddressLine(1);
+                    mTextViewLocation.setText(" "+toSendLocation);
+                } else {
+                    toSendLocation = location.get(0).getAddressLine(0)+ location.get(0).getAddressLine(1)+ location.get(0).getAddressLine(2);
+                    mTextViewLocation.setText(" "+toSendLocation);
+                }
+            }
+        });
+
+        mCheckBoxPrivacy.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked)
+                    privacy = "private";
+                else
+                    privacy = "public";
             }
         });
 
@@ -147,43 +186,93 @@ public class PreUploadFragment extends android.app.Fragment {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         this.menu = menu;
-        if(!showTick)
-            menu.getItem(0).setEnabled(false);
-        else
-            menu.getItem(0).setEnabled(true);
+        //if(!showTick)
+            //menu.getItem(0).setEnabled(false);
+        //else
+            //menu.getItem(0).setEnabled(true);
     }
 
-    public class BitmapScalar extends AsyncTask<Void, Void, Bitmap>
-    {
-        private Bitmap raw;
-        BitmapScalar(Bitmap raw) {
-            this.raw = raw;
-        }
-        public Bitmap scaleToFitWidth(Bitmap b, int width)
-        {
-            float factor = width / (float) b.getWidth();
-            return Bitmap.createScaledBitmap(b, width, (int) (b.getHeight() * factor), true);
-        }
+    void accept() throws FileNotFoundException {
+        final PicWizBackend picWizBackend = new PicWizBackend(getActivity());
+        progressDialog.setTitle("Posting...");
+        final CountDownTimer countDownTimer = new CountDownTimer(60000, 1000) {
 
-        public Bitmap scaleToFitHeight(Bitmap b, int height)
-        {
-            float factor = height / (float) b.getHeight();
-            return Bitmap.createScaledBitmap(b, (int) (b.getWidth() * factor), height, true);
-        }
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.i("time", String.valueOf(millisUntilFinished));
+                if (picWizBackend.getWait()) {
+                    //progressDialog.hide();
+                    this.cancel();
+                    Toast.makeText(getActivity(), picWizBackend.getMessage(), Toast.LENGTH_SHORT).show();
+                    if (picWizBackend.getSuccess() == 1) {
+                        getActivity().finish();
+                    } else {
+                        Snackbar.make(baseLayout.getRootView(), picWizBackend.getMessage(), Snackbar.LENGTH_LONG).show();
+                    }
+                }
+            }
 
-        @Override
-        protected Bitmap doInBackground(Void... params) {
-            Bitmap temp;
-            temp = scaleToFitWidth(raw, 1080);
-            temp = scaleToFitHeight(temp, 1440);
-            return temp;
-        }
+            @Override
+            public void onFinish() {
+                timeout = true;
+                Log.i("time", "Clock finished");
+                //progressDialog.hide();
+                this.cancel();
+                //getActivity().finish();
+                Snackbar.make(baseLayout.getRootView(), "Upload Failed. Error: Request Timeout", Snackbar.LENGTH_LONG).show();
+            }
+        };
+        final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/PicWiz/Saves/";
+        File newDir = new File(dir);
+        if (!newDir.isDirectory())
+            newDir.mkdir();
 
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-            touchImageView.setImageBitmap(bitmap);
+        String userID = settings.getString("USER_ID", null);
+        String tags = mEditTextTags.getText().toString().trim();
+        String caption = mEditTextCaption.getText().toString().trim();
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat curFormater = new SimpleDateFormat("dMy-hms");
+        SimpleDateFormat timeStamp = new SimpleDateFormat("d-M-y-h-m-s");
+        String date = curFormater.format(calendar.getTime()).trim();
+        String pictureName = dir + "img-" + date + ".jpg";
+        File pic = new File(pictureName);
+        touchImageView.extensions().crop().quality(100).format(Bitmap.CompressFormat.JPEG).into(pic);
+        Bitmap bitmap = touchImageView.crop();
+
+        String toSendTimeStamp = timeStamp.format(calendar.getTime());
+        if (!tags.isEmpty() || tags == "#")
+            if (!caption.isEmpty()) {
+                if (toSendLocation == null)
+                    toSendLocation = "none";
+                picWizBackend.createPost(userID, tags, caption, bitmap, toSendLocation, privacy, toSendTimeStamp);
+                Log.v("Info: ", userID+": "+tags+": "+caption+": "+toSendLocation+": "+privacy+": "+toSendTimeStamp);
+                countDownTimer.start();
+            }
+            else {
+                mEditTextCaption.setError("Caption cannot be empty");
+                mEditTextCaption.requestFocus();
+            }
+        else {
+            mEditTextTags.setError("Tags cannot be empty");
+            mEditTextTags.requestFocus();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_done:
+                try {
+                    //progressDialog.show();
+                    accept();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    Log.i("Save Pic: ", e.getMessage());
+                }
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public class GetGeoLocation extends AsyncTask<Void, Void, Void> {
@@ -269,12 +358,16 @@ public class PreUploadFragment extends android.app.Fragment {
             super.onPostExecute(aVoid);
             Log.i("geo: ", Latitude + ":" + Longitude);
             if(!timeout_geo) {
-                mTextViewLocation.setText(" "+addresses.get(0).getAddressLine(0) +", "+ addresses.get(0).getAddressLine(1) +", "+ addresses.get(0).getAddressLine(2));
-                menu.getItem(0).setEnabled(true);
+                toSendLocation = addresses.get(0).getAddressLine(0) + ", " + addresses.get(0).getAddressLine(1) + ", " + addresses.get(0).getAddressLine(2);
+                mTextViewLocation.setText(" "+toSendLocation);
+                location = addresses;
+                mCheckBoxGeneralLocation.setVisibility(View.VISIBLE);
+                mTextViewGeneralLocationInfo.setVisibility(View.VISIBLE);
+                //menu.getItem(0).setEnabled(true);
             }
             else {
                 mTextViewLocation.setText(" Unable to fetch location, tap here to refresh.");
-                menu.getItem(0).setEnabled(false);
+                //menu.getItem(0).setEnabled(false);
             }
         }
     }
