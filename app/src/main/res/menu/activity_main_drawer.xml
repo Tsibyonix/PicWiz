@@ -15,6 +15,10 @@
                 android:id="@+id/profile_setting"
                 android:icon="@drawable/ic_tab_profile"
                 android:title="Account Settings" />
+            <item
+                android:id="@+id/profile_logout"
+                android:icon="@drawable/ic_action_logout"
+                android:title="Logout" />
         </menu>
     </item>
 

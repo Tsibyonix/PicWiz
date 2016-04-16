@@ -1,4 +1,6 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    android:animateLayoutChanges="true"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -6,6 +8,14 @@
     tools:context="com.core.picwiz.HomeFragment">
 
     <!-- TODO: Update blank fragment layout -->
+    <TextView
+        android:id="@+id/text_view_waiting"
+        android:visibility="gone"
+        android:gravity="center"
+        android:text="Waiting for data from the server"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <android.support.v7.widget.RecyclerView
         android:padding="8dp"
         android:id="@+id/recycler_view_home_fragment"

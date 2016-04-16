@@ -29,6 +29,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,6 +45,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 
 /**
@@ -52,6 +61,7 @@ public class PreUploadFragment extends android.app.Fragment {
     private EditText mEditTextTags;
     private EditText mEditTextCaption;
     private CheckBox mCheckBoxPrivacy;
+    private String locationType = "precise";
     private ProgressDialog progressDialog;
     private String privacy = "public";
 
@@ -125,9 +135,11 @@ public class PreUploadFragment extends android.app.Fragment {
                 if (isChecked) {
                     toSendLocation = location.get(0).getAddressLine(1);
                     mTextViewLocation.setText(" "+toSendLocation);
+                    locationType = "general";
                 } else {
                     toSendLocation = location.get(0).getAddressLine(0)+ location.get(0).getAddressLine(1)+ location.get(0).getAddressLine(2);
                     mTextViewLocation.setText(" "+toSendLocation);
+                    locationType = "precise";
                 }
             }
         });
@@ -205,6 +217,7 @@ public class PreUploadFragment extends android.app.Fragment {
                     this.cancel();
                     Toast.makeText(getActivity(), picWizBackend.getMessage(), Toast.LENGTH_SHORT).show();
                     if (picWizBackend.getSuccess() == 1) {
+                        picWizBackend.postImage();
                         getActivity().finish();
                     } else {
                         Snackbar.make(baseLayout.getRootView(), picWizBackend.getMessage(), Snackbar.LENGTH_LONG).show();
@@ -219,7 +232,7 @@ public class PreUploadFragment extends android.app.Fragment {
                 //progressDialog.hide();
                 this.cancel();
                 //getActivity().finish();
-                Snackbar.make(baseLayout.getRootView(), "Upload Failed. Error: Request Timeout", Snackbar.LENGTH_LONG).show();
+                //Snackbar.make(baseLayout.getRootView(), "Upload Failed. Error: Request Timeout", Snackbar.LENGTH_LONG).show();
             }
         };
         final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/PicWiz/Saves/";
@@ -227,7 +240,8 @@ public class PreUploadFragment extends android.app.Fragment {
         if (!newDir.isDirectory())
             newDir.mkdir();
 
-        String userID = settings.getString("USER_ID", null);
+        String username = settings.getString("USERNAME", null);
+        String tag_line = settings.getString("TAGLINE", null);
         String tags = mEditTextTags.getText().toString().trim();
         String caption = mEditTextCaption.getText().toString().trim();
         Calendar calendar = Calendar.getInstance();
@@ -244,8 +258,9 @@ public class PreUploadFragment extends android.app.Fragment {
             if (!caption.isEmpty()) {
                 if (toSendLocation == null)
                     toSendLocation = "none";
-                picWizBackend.createPost(userID, tags, caption, bitmap, toSendLocation, privacy, toSendTimeStamp);
-                Log.v("Info: ", userID+": "+tags+": "+caption+": "+toSendLocation+": "+privacy+": "+toSendTimeStamp);
+                picWizBackend.createPost(username, tag_line, tags, caption, bitmap, toSendLocation, locationType, privacy, toSendTimeStamp);
+                Log.v("Info: ", username+": "+tags+": "+caption+": "+toSendLocation+": "+privacy+": "+toSendTimeStamp);
+                countDownTimer.cancel();
                 countDownTimer.start();
             }
             else {

@@ -6,17 +6,21 @@ import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
-import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
-import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -42,8 +46,13 @@ public class PicWizBackend implements MyEventListener {
     private String service = null;
     private int followers = 0;
     private int following = 0;
+    private String imageName = null;
+    private String imageString = null;
+    private Gson gson;
+    private ReceivePost receivePost;
 
-    private static final MediaType MEDIA_TYPE_JPEG = MediaType.parse("image/jpg");
+    private final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
 
     public PicWizBackend(Context context) {
         this.context = context;
@@ -86,6 +95,10 @@ public class PicWizBackend implements MyEventListener {
         return following;
     }
 
+    public ReceivePost getReceivePost() {
+        return receivePost;
+    }
+
     public Boolean getWait() {
         return responseReceived;
     }
@@ -103,13 +116,19 @@ public class PicWizBackend implements MyEventListener {
             "login",
             "update",
             "authenticate",
-            "post"
+            "post",
+            "get"
     };
 
     public void register(String email, String password, String username) {
         service = servicesProvided[0];
         Log.i("register: ", "function init");
-        Task registerTask = new Task(this, email, password, username);
+        HashMap<String, String> map = new HashMap<>();
+        map.put("email", email);
+        map.put("password", password);
+        map.put("username", username);
+        RequestBody body = RequestBody.create(JSON, new JSONObject(map).toString());
+        Task registerTask = new Task(this, body, email, password, username);
         registerTask.execute((Void) null);
     }
 
@@ -127,29 +146,70 @@ public class PicWizBackend implements MyEventListener {
         updateTask.execute((Void) null);
     }
 
-    public void createPost(String userID, String tags, String caption, Bitmap image, String location, String privacy, String time) {
-        final MediaType JSON
-                = MediaType.parse("application/json; charset=utf-8");
+    public void createPost(String username, String tag_line, String tags, String caption, Bitmap image, String location, String locationType, String privacy, String time) {
         service = servicesProvided[4];
         Log.i("post: ", "function init");
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageBytes = baos.toByteArray();
-        String imageString = Base64.encodeToString(imageBytes, Base64.URL_SAFE);
-        String json =
-                "{\"image\": \"img-"+time+".jpg\", "
-                + "\"id\": \""+userID+"\", "
-                + "\"tags\": \""+tags+"\", "
-                + "\"caption\": \""+caption+"\", "
-                + "\"location\": \""+location+"\", "
-                + "\"privacy\": \""+privacy+"\", "
-                + "\"time\": \""+time+"\"}";
-        Log.i("json: ", json);
-        RequestBody body = RequestBody.create(JSON, json);
+        imageString = Base64.encodeToString(imageBytes, Base64.URL_SAFE);
+        HashMap<String, String> map = new HashMap<>();
+        map.put("image", "img-"+time+".jpg");
+        map.put("username", username);
+        map.put("tag_line", tag_line);
+        map.put("tags", tags);
+        map.put("caption", caption);
+        map.put("location", location);
+        map.put("locationType", locationType);
+        map.put("privacy", privacy);
+        map.put("time", time);
 
-        Task postTask = new Task(this, userID, tags, caption, body,location, privacy, time);
+        Log.i("json: ", new JSONObject(map).toString());
+        RequestBody body = RequestBody.create(JSON, new JSONObject(map).toString());
+
+        Task postTask = new Task(this, body);
         postTask.execute((Void) null);
     }
+
+    void postImage() {
+        HashMap<String, String> map = new HashMap<>();
+        if (imageName != null && imageString != null) {
+            map.put("image_name", imageName);
+            map.put("image", imageString);
+        }
+            final RequestQueue requestQueue = Volley.newRequestQueue(context);
+
+        JsonObjectRequest request = new JsonObjectRequest(com.android.volley.Request.Method.POST,
+                "http://192.168.1.4:8000/image", new JSONObject(map), new com.android.volley.Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    message = response.getString("message");
+                    success = response.getInt("success");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new com.android.volley.Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+            requestQueue.add(request);
+
+    }
+
+    void getPost(String username) {
+        service = servicesProvided[5];
+        HashMap<String, String> map = new HashMap<>();
+        map.put("username", username);
+        RequestBody body = RequestBody.create(JSON, new JSONObject(map).toString());
+        Task getPost = new Task(this, body);
+        getPost.execute();
+    }
+
     @Override
     public void onEventCompleted(JSONObject jsonObject) {
         try {
@@ -184,12 +244,21 @@ public class PicWizBackend implements MyEventListener {
                     message = jsonObject.getString("message");
                     success = jsonObject.getInt("success");
                     host = jsonObject.getString("host");
+                    if (success == 1) {
+                        imageName = jsonObject.getString("image");
+                    }
+                    break;
+                case "get":
+                    //receivePost = new ReceivePost();
+                    gson = new Gson();
+                    receivePost = gson.fromJson(jsonObject.toString(), ReceivePost.class);
+                    success = receivePost.getSuccess();
                     break;
             }
         }
         catch (JSONException e) {
             e.printStackTrace();
-            Log.i("register: ", e.getMessage());
+            Log.i(service+": ", e.getMessage());
         }
         Log.i("register", "setting response received");
         responseReceived = true;
@@ -230,9 +299,10 @@ public class PicWizBackend implements MyEventListener {
         String location = null;
         String privacy = null;
         String timeStamp = null;
-        RequestBody imageBody;
+        RequestBody requestBody;
 
-        public Task(MyEventListener cb, String arg1, String arg2, String arg3) {
+        public Task(MyEventListener cb, RequestBody body, String arg1, String arg2, String arg3) {
+            //register
             callback = cb;
             this.email = arg1;
             this.password = arg2;
@@ -240,6 +310,7 @@ public class PicWizBackend implements MyEventListener {
         }
 
         public Task(MyEventListener cb, String arg1, String arg2) {
+            //login
             callback = cb;
             this.email = arg1;
             this.password = arg2;
@@ -252,10 +323,10 @@ public class PicWizBackend implements MyEventListener {
             this.tagline = arg3;
         }
 
-        public Task(MyEventListener cb, String arg1, String arg2, String arg3, RequestBody arg4, String arg5, String arg6, String arg7) {
+        public Task(MyEventListener cb, RequestBody arg1) {
+            //post
             callback = cb;
-            //image = arg4;
-            imageBody = arg4;
+            requestBody = arg1;
         }
 
         private String run() throws IOException {
@@ -286,21 +357,18 @@ public class PicWizBackend implements MyEventListener {
                     break;
                 case "post":
                     HttpUrl.Builder post = HttpUrl.parse("http://192.168.1.4:8000/post").newBuilder();
-                    //post.addQueryParameter("id", userID);
-                    //post.addQueryParameter("tags", tags);
-                    //post.addQueryParameter("caption", caption);
-                    //post.addQueryParameter("location", location);
-                    //post.addQueryParameter("privacy", privacy);
-                    //post.addQueryParameter("time", timeStamp);
                     url = post.build().toString();
                     break;
+                case "get":
+                    HttpUrl.Builder get = HttpUrl.parse("http://192.168.1.4:8000/get_post").newBuilder();
+                    url = get.build().toString();
             }
             assert url != null;
             Request register;
-            if (service == "post") {
+            if (service == "post" || service == "get") {
                 register = new Request.Builder()
                         .url(url)
-                        .post(imageBody)
+                        .post(requestBody)
                         .build();
                 Log.i("url: ", url);
             } else {
@@ -319,10 +387,10 @@ public class PicWizBackend implements MyEventListener {
             String temp = null;
             try {
                 temp = run();
-                Log.i("register: ", "response received");
+                Log.i(service+": ", "response received");
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.i("register: ", e.getMessage());
+                Log.i(service+": ", e.getMessage());
             }
             return temp;
         }
@@ -337,11 +405,11 @@ public class PicWizBackend implements MyEventListener {
             try {
                 JSONObject jsonObject = new JSONObject(s);
                 callback.onEventCompleted(jsonObject);
-                Log.i("register: ", jsonObject.getString("message"));
+                Log.i(service+": ", jsonObject.getString("message"));
             } catch (JSONException e) {
                 callback.onEventFailed(null);
                 e.printStackTrace();
-                Log.i("register: ", e.getMessage());
+                Log.i(service+": ", e.getMessage());
             }
         }
     }

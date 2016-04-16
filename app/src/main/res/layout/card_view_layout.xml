@@ -88,6 +88,13 @@
             android:text="This is the caption for the picture, You can disable the pic and just have the caption"
             android:gravity="left" />
 
+        <android.support.v7.widget.RecyclerView
+            android:visibility="gone"
+            android:id="@+id/recycler_view_comment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </android.support.v7.widget.RecyclerView>
+
         <android.support.design.widget.TextInputLayout
             android:visibility="gone"
             android:paddingLeft="4dp"
@@ -175,7 +182,6 @@
                     android:id="@+id/text_view_comment"
                     android:textColor="#E42263"
                     android:drawableTint="#E42263"
-                    android:text=" 0"
                     android:textStyle="bold"
                     android:textSize="18sp"
                     android:drawableLeft="@drawable/ic_comment"

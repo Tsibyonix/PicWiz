@@ -125,6 +125,14 @@ public class HomeActivity extends AppCompatActivity
                 Intent secondaryIntent = new Intent(HomeActivity.this, SecondaryActivity.class);
                 secondaryIntent.putExtra("toLoad", "profile_settings");
                 HomeActivity.this.startActivity(secondaryIntent);
+                break;
+            case R.id.profile_logout:
+                Toast.makeText(getApplicationContext(), "Profile settings", Toast.LENGTH_SHORT).show();
+                settings.edit().clear().apply();
+                Intent loginIntent = new Intent(HomeActivity.this, LoginActivity.class);
+                this.startActivity(loginIntent);
+                this.finish();
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
