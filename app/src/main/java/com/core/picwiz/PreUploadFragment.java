@@ -182,6 +182,7 @@ public class PreUploadFragment extends android.app.Fragment {
         mTextViewLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mCheckBoxGeneralLocation.setChecked(false);
                 new GetGeoLocation(imagePath).execute();
             }
         });
@@ -217,7 +218,7 @@ public class PreUploadFragment extends android.app.Fragment {
                     this.cancel();
                     Toast.makeText(getActivity(), picWizBackend.getMessage(), Toast.LENGTH_SHORT).show();
                     if (picWizBackend.getSuccess() == 1) {
-                        picWizBackend.postImage();
+                        picWizBackend.postImage(picWizBackend.getPostKey());
                         getActivity().finish();
                     } else {
                         Snackbar.make(baseLayout.getRootView(), picWizBackend.getMessage(), Snackbar.LENGTH_LONG).show();
@@ -360,6 +361,8 @@ public class PreUploadFragment extends android.app.Fragment {
             run();
             try {
                 addresses = geocoder.getFromLocation(Latitude, Longitude, 1);
+                Log.i("geo: ", Latitude + ":" + Longitude);
+                //Log.i("size: ", String.valueOf(addresses.size()));
             } catch (IOException e) {
                 e.printStackTrace();
                 timeout_geo = true;
@@ -371,14 +374,18 @@ public class PreUploadFragment extends android.app.Fragment {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            Log.i("geo: ", Latitude + ":" + Longitude);
+            boolean empty = addresses.isEmpty();
             if(!timeout_geo) {
-                toSendLocation = addresses.get(0).getAddressLine(0) + ", " + addresses.get(0).getAddressLine(1) + ", " + addresses.get(0).getAddressLine(2);
-                mTextViewLocation.setText(" "+toSendLocation);
-                location = addresses;
-                mCheckBoxGeneralLocation.setVisibility(View.VISIBLE);
-                mTextViewGeneralLocationInfo.setVisibility(View.VISIBLE);
-                //menu.getItem(0).setEnabled(true);
+                if (empty) {
+                    mTextViewLocation.setText(" Unable to fetch location, tap here to refresh.");
+                } else {
+                    toSendLocation = addresses.get(0).getAddressLine(0) + ", " + addresses.get(0).getAddressLine(1) + ", " + addresses.get(0).getAddressLine(2);
+                    mTextViewLocation.setText(String.format(" %s", toSendLocation));
+                    location = addresses;
+                    mCheckBoxGeneralLocation.setVisibility(View.VISIBLE);
+                    mTextViewGeneralLocationInfo.setVisibility(View.VISIBLE);
+                    //menu.getItem(0).setEnabled(true);
+                }
             }
             else {
                 mTextViewLocation.setText(" Unable to fetch location, tap here to refresh.");

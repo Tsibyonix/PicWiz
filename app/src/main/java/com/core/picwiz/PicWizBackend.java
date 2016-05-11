@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import okhttp3.HttpUrl;
@@ -48,8 +49,10 @@ public class PicWizBackend implements MyEventListener {
     private int following = 0;
     private String imageName = null;
     private String imageString = null;
+    private String postKey = null;
     private Gson gson;
     private ReceivePost receivePost;
+    private RefreshComment refreshComment;
 
     private final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
@@ -95,8 +98,16 @@ public class PicWizBackend implements MyEventListener {
         return following;
     }
 
+    public String getPostKey() {
+        return postKey;
+    }
+
     public ReceivePost getReceivePost() {
         return receivePost;
+    }
+
+    public RefreshComment getRefreshComment() {
+        return refreshComment;
     }
 
     public Boolean getWait() {
@@ -117,7 +128,9 @@ public class PicWizBackend implements MyEventListener {
             "update",
             "authenticate",
             "post",
-            "get"
+            "get",
+            "comment",
+            "refresh_comment"
     };
 
     public void register(String email, String password, String username) {
@@ -153,6 +166,7 @@ public class PicWizBackend implements MyEventListener {
         image.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] imageBytes = baos.toByteArray();
         imageString = Base64.encodeToString(imageBytes, Base64.URL_SAFE);
+        //imageString = Arrays.toString(imageBytes);
         HashMap<String, String> map = new HashMap<>();
         map.put("image", "img-"+time+".jpg");
         map.put("username", username);
@@ -171,14 +185,14 @@ public class PicWizBackend implements MyEventListener {
         postTask.execute((Void) null);
     }
 
-    void postImage() {
+    public void postImage(String key) {
         HashMap<String, String> map = new HashMap<>();
         if (imageName != null && imageString != null) {
             map.put("image_name", imageName);
             map.put("image", imageString);
+            map.put("key", key);
         }
-            final RequestQueue requestQueue = Volley.newRequestQueue(context);
-
+        final RequestQueue requestQueue = Volley.newRequestQueue(context);
         JsonObjectRequest request = new JsonObjectRequest(com.android.volley.Request.Method.POST,
                 "http://192.168.1.4:8000/image", new JSONObject(map), new com.android.volley.Response.Listener<JSONObject>() {
             @Override
@@ -189,7 +203,6 @@ public class PicWizBackend implements MyEventListener {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
             }
         }, new com.android.volley.Response.ErrorListener() {
             @Override
@@ -198,16 +211,44 @@ public class PicWizBackend implements MyEventListener {
             }
         });
             requestQueue.add(request);
-
     }
 
-    void getPost(String username) {
+    public void getPost(String username) {
         service = servicesProvided[5];
         HashMap<String, String> map = new HashMap<>();
         map.put("username", username);
         RequestBody body = RequestBody.create(JSON, new JSONObject(map).toString());
         Task getPost = new Task(this, body);
         getPost.execute();
+    }
+
+    public void comment(String key, String username, String comment) {
+        service = servicesProvided[6];
+        Log.i("comment: ", "Adding comment");
+        if (!key.isEmpty() && !username.isEmpty() && !comment.isEmpty()) {
+            HashMap<String, String> map = new HashMap<>();
+            map.put("post_id", key);
+            map.put("username", username);
+            map.put("comment", comment);
+            RequestBody body = RequestBody.create(JSON, new JSONObject(map).toString());
+            Task getPost = new Task(this, body);
+            getPost.execute();
+        } else {
+            Log.i("comment: ", "empty data");
+        }
+    }
+
+    public void refreshComments(String postKey) {
+        service = servicesProvided[7];
+        if (!postKey.isEmpty()) {
+            HashMap<String, String> map = new HashMap<>();
+            map.put("post_id", postKey);
+            RequestBody body = RequestBody.create(JSON, new JSONObject(map).toString());
+            Task getPost = new Task(this, body);
+            getPost.execute();
+        } else {
+            Log.i("refresh_comment: ", "empty data");
+        }
     }
 
     @Override
@@ -243,6 +284,7 @@ public class PicWizBackend implements MyEventListener {
                 case "post":
                     message = jsonObject.getString("message");
                     success = jsonObject.getInt("success");
+                    postKey = jsonObject.getString("key");
                     host = jsonObject.getString("host");
                     if (success == 1) {
                         imageName = jsonObject.getString("image");
@@ -253,6 +295,14 @@ public class PicWizBackend implements MyEventListener {
                     gson = new Gson();
                     receivePost = gson.fromJson(jsonObject.toString(), ReceivePost.class);
                     success = receivePost.getSuccess();
+                    break;
+                case "comment":
+
+                    break;
+                case "refresh_comment":
+                    gson = new Gson();
+                    refreshComment = gson.fromJson(jsonObject.toString(), RefreshComment.class);
+                    success = refreshComment.getSuccess();
                     break;
             }
         }
@@ -362,10 +412,19 @@ public class PicWizBackend implements MyEventListener {
                 case "get":
                     HttpUrl.Builder get = HttpUrl.parse("http://192.168.1.4:8000/get_post").newBuilder();
                     url = get.build().toString();
+                    break;
+                case "comment":
+                    HttpUrl.Builder comment = HttpUrl.parse("http://192.168.1.4:8000/comment").newBuilder();
+                    url = comment.build().toString();
+                    break;
+                case "refresh_comment":
+                    HttpUrl.Builder refresh = HttpUrl.parse("http://192.168.1.4:8000/refresh_comment").newBuilder();
+                    url = refresh.build().toString();
+                    break;
             }
             assert url != null;
             Request register;
-            if (service == "post" || service == "get") {
+            if (service == "post" || service == "get" || service == "comment" || service == "refresh_comment") {
                 register = new Request.Builder()
                         .url(url)
                         .post(requestBody)

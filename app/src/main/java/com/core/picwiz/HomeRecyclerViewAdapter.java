@@ -1,15 +1,24 @@
 package com.core.picwiz;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.CountDownTimer;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,9 +33,9 @@ import java.util.Map;
  */
 public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerViewAdapter.HomeRecyclerViewHolder> {
     public LayoutInflater inflater;
-    //List<HomeRecyclerList> homeRecyclerLists;
     private ReceivePost receivePost;
     Context context;
+    private PicWizBackend picWizBackend;
 
     String[] month = {
             "Jan",
@@ -46,13 +55,11 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
     HomeRecyclerViewAdapter(Context context, ReceivePost receivePost) {
         inflater = LayoutInflater.from(context);
         this.context = context;
-        //this.homeRecyclerLists = homeRecyclerLists;
         this.receivePost = receivePost;
     }
 
     @Override
     public HomeRecyclerViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        //View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view_layout, parent, false);
         View v = inflater.inflate(R.layout.card_view_layout, parent, false);
         HomeRecyclerViewHolder homeRecyclerViewHolder = new HomeRecyclerViewHolder(v);
         return homeRecyclerViewHolder;
@@ -62,7 +69,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         CommentRecyclerViewAdapter commentRecyclerViewAdapter = new CommentRecyclerViewAdapter(context, receivePost.getOutput().get(position).getComments());
         holder.commentRecyclerView.setVisibility(View.VISIBLE);
         holder.commentRecyclerView.setAdapter(commentRecyclerViewAdapter);
-        holder.commentRecyclerView.setHasFixedSize(false);
+        holder.commentRecyclerView.setHasFixedSize(true);
         holder.commentRecyclerView.setLayoutManager(new LinearLayoutManager(context));
     }
 
@@ -71,9 +78,35 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         return time[3]+":"+time[4]+", "+time[0]+"th "+month[Integer.parseInt(time[1])-1]+" "+time[2];
     }
 
+    private void updateComment(final HomeRecyclerViewHolder holder, String post_key) {
+        final CountDownTimer countDownTimer = new CountDownTimer(5000, 1000) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.i("time", String.valueOf(millisUntilFinished));
+                if (picWizBackend.getWait()) {
+                    Log.i("refresh_comment: ", picWizBackend.getRefreshComment().getComments().get("chronix"));
+                    holder.commentRecyclerView.setAdapter(new CommentRecyclerViewAdapter(context, picWizBackend.getRefreshComment().getComments()));
+                    this.cancel();
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                Log.i("time", "Clock finished");
+                this.cancel();
+            }
+        };
+        picWizBackend.refreshComments(post_key);
+        countDownTimer.start();
+    }
+
     @Override
     public void onBindViewHolder(final HomeRecyclerViewHolder holder, int position) {
         final String id = receivePost.getOutput().get(position).getId();
+        picWizBackend = new PicWizBackend(context);
+        final SharedPreferences settings = context.getSharedPreferences("config", Context.MODE_PRIVATE);
+
         holder.username.setText(receivePost.getOutput().get(position).getUsername());
         holder.tagLine.setText(receivePost.getOutput().get(position).getTag_line());
         holder.timeStamp.setText(getTime(position));
@@ -83,6 +116,23 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         holder.location.setText(String.format(" %s", receivePost.getOutput().get(position).getLocation()));
         holder.comments.setText(String.format(" %s", receivePost.getOutput().get(position).getComments().size()));
         setupCommentRecyclerView(holder, position);
+
+        holder.newComment.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    //Toast.makeText(context, "Adding comment", Toast.LENGTH_LONG).show();
+                    InputMethodManager imm = (InputMethodManager)context.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                    picWizBackend.comment(id, settings.getString("USERNAME", null), v.getText().toString());
+                    Toast.makeText(context, "updating recycler view comment", Toast.LENGTH_LONG).show();
+                    v.setText("");
+                    v.setVisibility(View.GONE);
+                    updateComment(holder, id);
+                }
+                return true;
+            }
+        });
         holder.username.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,6 +176,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
         com.like.LikeButton likeButton;
         TextView direction;
         TextView comments;
+        LinearLayout linearLayout;
 
         public HomeRecyclerViewHolder(View itemView) {
             super(itemView);
@@ -143,6 +194,7 @@ public class HomeRecyclerViewAdapter extends RecyclerView.Adapter<HomeRecyclerVi
             likeButton = (com.like.LikeButton) itemView.findViewById(R.id.like_button_card_view);
             direction = (TextView) itemView.findViewById(R.id.text_view_direction);
             comments = (TextView) itemView.findViewById(R.id.text_view_comment);
+            linearLayout = (LinearLayout) itemView.findViewById(R.id.layout);
         }
     }
 }
